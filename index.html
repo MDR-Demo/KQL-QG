@@ -172,7 +172,7 @@
                     break;
                 case 'tableCountMonitor':
                     const tableName = document.getElementById('logTable').value;
-                    query = `${tableName}\n| where TimeGenerated >= ago(7d)\n| summarize count() by bin(TimeGenerated, 1d), Computer\n| render timechart`;
+                    query = `${tableName}\n| where TimeGenerated >= ago(7d)\n| summarize count() by bin(TimeGenerated, 1d)\n| render timechart`;
                     emailStatement = `Hello Team,\n\nGreetings of the day!\n\nWe appear to be receiving fewer logs than usual from table "${tableName}".\n\nThe NTT MDR team recommends that the team(s) responsible for each device:\n1) Review the status of the system.\n2) Whether the system is correctly set up to send security logs to NTT (this might be via a log forwarder).\n3) Whether the system should not be monitored for regular logs (e.g., it's a test system or is offline for a period).`;
                     break;
             }

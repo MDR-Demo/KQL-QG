@@ -156,7 +156,17 @@
 
             switch (queryType) {
                 case 'heartbeat':
-                    query = `Heartbeat\n| where ${hostCondition}\n| summarize max(TimeGenerated) by Computer\n| extend Howlongago=(now() - max_TimeGenerated)\n| extend Array1 = split(Howlongago, ":")\n| extend hrs = Array1[0]\n| extend mins = Array1[1]\n| extend sec = Array1[2]\n| extend howlongsincelastlog = strcat(hrs," hrs ", mins, " mins ", sec, " sec ")\n| project max_TimeGenerated, Computer, Howlongago, howlongsincelastlog`;
+                    query = `Heartbeat
+                    | where ${hostCondition}
+                    | summarize max_TimeGenerated = max(TimeGenerated) by Computer
+                    | extend Howlongago = now() - max_TimeGenerated
+                    | extend days = bin(Howlongago, 1d)
+                    | extend hrs = bin(Howlongago % 1d, 1h)
+                    | extend mins = bin(Howlongago % 1h, 1m)
+                    | extend sec = bin(Howlongago % 1m, 1s)
+                    | extend howlongsincelastlog = strcat(days / 1d, " days ", hrs / 1h, " hrs ", mins / 1m, " mins ", sec / 1s, " sec ")
+                    | extend current_time = now()
+                    | project max_TimeGenerated, Computer, Howlongago, howlongsincelastlog, current_time`;
                     emailStatement = `Hello Team,\n\n<b>Greetings of the day!</b>\n\n<b>The following host(s) have been observed to have stopped sending heartbeats:</b>\n\n<b>Hostname(s):</b>\n<b>Last Heartbeat:</b>\n<b>Duration Since Last Log:</b>\n\nAttached is a screenshot for your reference.\n\n<b>Recommendations:</b>\nThe NTT MDR team recommends that the responsible team(s) for each device:\n1. Review the status of the system.\n2. Verify if the system is correctly configured to send security logs to NTT (this might be via a log forwarder).\n3. Determine if the system should not be monitored for regular logs (e.g., it is a test system or is offline for a period).`;
                     break;
                 case 'lograte':
